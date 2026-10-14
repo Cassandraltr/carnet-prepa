@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e0e0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prépa">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Carnet de Prépa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Concept : un carnet noir et rouge. Bandeau noir en tête, rouge réservé aux actions et à la courbe, états de forme lisibles d'un coup d'oeil. */
+:root{
+  --bg:#efeded; --surface:#ffffff; --fg:#0e0e0e; --muted:#5e5757; --line:#d9d3d3;
+  --accent:#c8102e; --accent-text:#c8102e; --accent-fg:#ffffff; --accent-soft:#f7dde0; --series:#c8102e;
+  --head:#0e0e0e; --head-fg:#ffffff; --head-muted:#bdb4b4;
+  --ok:#23703a; --warn:#9a5700; --bad:#b3261e;
+  --ok-soft:#e1f0e4; --warn-soft:#f8e9cf; --bad-soft:#f7dcd9;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0b0b; --surface:#151515; --fg:#f1eded; --muted:#a39b9b; --line:#2c2727;
+    --accent:#dc2f34; --accent-text:#ff6b6f; --accent-fg:#ffffff; --accent-soft:#3a1517; --series:#e5383b;
+    --head:#000000; --head-fg:#ffffff; --head-muted:#a39b9b;
+    --ok:#6fcf86; --warn:#e8a94a; --bad:#ff8a84;
+    --ok-soft:#18301e; --warn-soft:#3a2d14; --bad-soft:#40201e; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0b0b; --surface:#151515; --fg:#f1eded; --muted:#a39b9b; --line:#2c2727;
+  --accent:#dc2f34; --accent-text:#ff6b6f; --accent-fg:#ffffff; --accent-soft:#3a1517; --series:#e5383b;
+  --head:#000000; --head-fg:#ffffff; --head-muted:#a39b9b;
+  --ok:#6fcf86; --warn:#e8a94a; --bad:#ff8a84;
+  --ok-soft:#18301e; --warn-soft:#3a2d14; --bad-soft:#40201e; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:960px;margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;padding:18px 16px 14px;margin-top:12px;background:var(--head);color:var(--head-fg);border-bottom:4px solid var(--accent);border-radius:6px 6px 0 0}
+header.top h1{font-size:2.1rem;line-height:1;text-transform:uppercase}
+header.top .sub{color:var(--head-muted);font-size:.85rem}
+.roletag{border:1px solid var(--head-muted);color:var(--head-fg);border-radius:99px;padding:1px 9px;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.sync{font-size:.75rem;color:var(--head-muted);display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--warn);display:inline-block}
+.sync.on i{background:var(--ok)}
+.sync.bad i{background:var(--bad)}
+.sync.bad{color:#ff8a84}
+.sync button{margin-left:4px;color:var(--head-fg);border-color:var(--head-muted)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;padding-block:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+nav.tabs button{flex:1 0 auto;font-family:var(--f-display);font-size:1.05rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:4px;cursor:pointer;min-height:40px}
+nav.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent-text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:16px}
+section.view{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.panel h2{font-size:1.3rem;text-transform:uppercase;margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.row>*{min-width:0}
+label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-height:40px;min-width:0;width:100%}
+textarea{min-height:64px;resize:vertical}
+.grow{flex:1 1 140px}
+button.btn{font-family:var(--f-display);font-size:1.05rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:8px 16px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);cursor:pointer;min-height:40px}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+button.small{font-size:.9rem;padding:4px 10px;min-height:32px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font-family:var(--f-display);font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;text-align:left;color:var(--muted);padding:6px 10px;border-bottom:2px solid var(--fg);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.78rem;font-weight:600}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.off{background:var(--line);color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{border-left:4px solid var(--accent);padding:4px 0 4px 10px}
+.kpi b{display:block;font-family:var(--f-display);font-size:1.9rem;line-height:1.05}
+.kpi b small,.tv small{font-size:.8rem;font-weight:500;color:var(--muted)}
+.kpi span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+.empty{color:var(--muted);padding:14px 0;margin:0}
+.note{border-top:1px dashed var(--line);padding-top:8px;margin-top:8px;font-size:.9rem}
+.note small{color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.cols>*{min-width:0}
+svg text{fill:var(--muted);font-family:var(--f-body);font-size:10px}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.avatar{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);display:inline-flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:1rem;overflow:hidden;object-fit:cover}
+.avatar.big{width:52px;height:52px;font-size:1.3rem}
+label.photo{cursor:pointer;text-transform:none;letter-spacing:0;font-size:.75rem;color:var(--muted);display:inline-flex;flex-direction:row;align-items:center;gap:6px}
+label.photo input{display:none}
+.seg{display:flex;gap:4px}
+.seg button{flex:1;font-family:var(--f-display);font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:6px 12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:4px;cursor:pointer;min-height:38px}
+.seg button[aria-pressed="true"]{border-color:var(--accent-text);color:var(--accent-text);box-shadow:inset 0 -3px 0 var(--accent)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.fgrid>*{min-width:0}
+table.grid td:first-child,table.grid th:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
+table.grid input{width:84px;text-align:right}
+table.grid td{padding:6px 8px}
+.big-line{font-family:var(--f-display);font-size:1.5rem;font-weight:700;line-height:1.15;margin:0 0 10px}
+.team{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:14px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;color:var(--fg);font:inherit;min-width:0}
+.tile .ph{width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;background:var(--accent-soft);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:2.2rem;border:3px solid transparent;max-width:100%}
+.tile .ph.warn{border-color:var(--warn)}
+.tile .ph.bad{border-color:var(--bad)}
+.tile .cap{font-size:.78rem;color:var(--muted);line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.tile.add .ph{background:transparent;border:2px dashed var(--line);color:var(--muted);font-size:2.4rem}
+.tile:hover .ph{border-color:var(--accent-text)}
+.back{align-self:flex-start}
+.pcard{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.pcard .portrait{width:132px;max-width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;background:var(--accent-soft);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:3rem;flex:none}
+.pcard .info{flex:1 1 260px;min-width:0}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bars .b{display:grid;grid-template-columns:90px 1fr 70px;gap:8px;align-items:center;font-size:.85rem;font-variant-numeric:tabular-nums}
+.bars .b i{display:block;height:12px;background:var(--accent);border-radius:2px;min-width:2px}
+.testgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.ttile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px;cursor:pointer;color:var(--fg);font:inherit;min-width:0}
+.ttile:hover{border-color:var(--accent-text)}
+.ttile .tn{font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;line-height:1.1}
+.ttile .tv{font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1}
+.ttile .ts{font-size:.78rem;color:var(--muted)}
+.chartbox{position:relative}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible}
+svg circle[data-pi]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:6px 10px;font-size:.8rem;box-shadow:0 2px 8px rgba(0,0,0,.14);white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));z-index:3}
+.tip b{display:block;font-family:var(--f-display);font-size:1.2rem;line-height:1.1}
+.tip span{color:var(--muted)}
+.exedit{margin-block:8px}
+.exedit summary{cursor:pointer;font-size:.85rem;color:var(--accent-text);font-weight:600;padding-block:4px}
+@media (prefers-reduced-motion: no-preference){button{transition:background .15s}}
+
+.previewbar{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--head);color:var(--head-fg);padding:10px 14px;border-radius:10px;margin-bottom:12px;flex-wrap:wrap}
+.rpe{display:flex;gap:4px;flex-wrap:wrap}
+.rpe button{min-width:40px;min-height:44px;border:1px solid var(--line,#999);background:transparent;color:inherit;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+.rpe button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rpe button:disabled{opacity:.5;cursor:default}
+.srow{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:12px 14px;margin-top:8px;border:1px solid var(--line,#999);border-radius:10px;background:transparent;color:inherit;font:inherit;cursor:pointer;min-height:48px}
+.srow .hint{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Carnet de Prépa</h1>
+    <div class="sub">Musculation, tests et blessures de l'équipe</div>
+  </div>
+  <div class="sync" id="sync" role="status" aria-live="polite"><span class="roletag" id="roleTag" hidden></span><i></i><span id="syncTxt">Enregistré sur cet appareil seulement</span><button type="button" class="btn ghost small" id="syncRetry" data-act="retrySync" hidden>Réessayer</button></div>
+</header>
+<main>
+  <section class="view" id="v-equipe">
+    <div class="previewbar" id="previewBar" hidden><span>Aperçu : tu vois l'appli comme un joueur.</span><button type="button" class="btn small" data-act="exitPreview">Revenir au staff</button></div>
+    <div class="view" id="sessView" hidden></div>
+    <div class="view" id="teamView">
+    <div class="panel" id="sessPanel" hidden></div>
+    <div class="panel" id="addPanel" hidden>
+      <h2>Ajouter un joueur</h2>
+      <form class="row" id="fPlayer">
+        <label class="grow">Nom<input id="pName" required autocomplete="off" placeholder="Nom du joueur"></label>
+        <label class="grow">Poste
+          <select id="pPos">
+            <option>Pilier</option><option>Talonneur</option><option>Deuxième ligne</option>
+            <option>Troisième ligne</option><option>Demi de mêlée</option><option>Demi d'ouverture</option>
+            <option>Centre</option><option>Ailier</option><option>Arrière</option>
+          </select>
+        </label>
+        <label style="width:100px">Taille (cm)<input id="pHeight" type="number" min="140" max="230" step="1" inputmode="numeric"></label>
+        <label style="width:100px">Poids (kg)<input id="pWeight" type="number" min="40" max="200" step="0.1" inputmode="decimal"></label>
+        <label class="grow">Photo<input id="pPhoto" type="file" accept="image/*"></label>
+        <button class="btn" type="submit">Ajouter</button>
+      </form>
+    </div>
+    <div class="panel">
+      <div id="roster"></div>
+    </div>
+    </div>
+    <div class="view" id="playerView" hidden></div>
+  </section>
+</main>
+</div>
+<script>
+(function(){
+"use strict";
+var COLS=["players","muscu","charges","tests","injuries"];
+var state={players:[],muscu:[],charges:[],tests:[],injuries:[]};
+var LS="carnet-prepa-v1", LSP="carnet-prepa-v1-pending", db=null;
+var TESTS=[
+  {id:"taille",label:"Taille",unit:"cm",better:"neutral"},
+  {id:"poids",label:"Poids",unit:"kg",better:"neutral"},
+  {id:"sorensen",label:"Sorensen",unit:"s",better:"high"},
+  {id:"shirado",label:"Shirado",unit:"s",better:"high"},
+  {id:"cervicales",label:"Cervicales",unit:"kg",better:"high"},
+  {id:"fms",label:"FMS",unit:"pts",better:"high"},
+  {id:"sq",label:"Max squat",unit:"kg",better:"high"},
+  {id:"hip",label:"Max hip thrust",unit:"kg",better:"high"},
+  {id:"dc",label:"Max DC",unit:"kg",better:"high"},
+  {id:"tirage",label:"Max tirage",unit:"kg",better:"high"},
+  {id:"bronco",label:"Bronco",unit:"s",better:"low"},
+  {id:"yoyo",label:"Yo-Yo",unit:"m",better:"high"},
+  {id:"s10",label:"Vitesse 10 m",unit:"s",better:"low"},
+  {id:"s20",label:"Vitesse 20 m",unit:"s",better:"low"},
+  {id:"s30",label:"Vitesse 30 m",unit:"s",better:"low"},
+  {id:"pfv",label:"PFV",unit:"",better:"high"},
+  {id:"cmj",label:"CMJ",unit:"cm",better:"high"},
+  {id:"bj",label:"BJ",unit:"cm",better:"high"}
+];
+var STATUS={soin:["En soin","bad"],retour:["Retour progressif","warn"],apte:["Apte","ok"]};
+var SEV={legere:"Légère",moderee:"Modérée",grave:"Grave"};
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function iso(d){var m=d.getMonth()+1,j=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(j<10?"0":"")+j}
+function today(){return iso(new Date())}
+function toDate(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
+function addDays(s,n){var d=toDate(s);d.setDate(d.getDate()+n);return iso(d)}
+function fmt(s){return toDate(s).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}
+function fmtLong(s){return toDate(s).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
+function num(v,d){return Number(v).toLocaleString("fr-FR",{maximumFractionDigits:d==null?0:d,minimumFractionDigits:d==null?0:d})}
+function player(id){return state.players.find(function(p){return p.id===id})}
+function pname(id){var p=player(id);return p?p.name:"Joueur supprimé"}
+function initials(n){return String(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0]}).join("").toUpperCase()}
+function avatar(p,big){
+  var cls="avatar"+(big?" big":"");
+  if(p&&p.photo)return '<img class="'+cls+'" src="'+esc(p.photo)+'" alt="">';
+  return '<span class="'+cls+'" aria-hidden="true">'+esc(initials(p&&p.name))+'</span>';
+}
+function who(id){var p=player(id);return '<span class="who">'+avatar(p)+'<b>'+esc(p?p.name:"Joueur supprimé")+'</b></span>'}
+function shrink(file,cb){
+  var r=new FileReader();
+  r.onerror=function(){cb(null)};
+  r.onload=function(){
+    var img=new Image();
+    img.onerror=function(){cb(null)};
+    img.onload=function(){
+      var S=160,c=document.createElement("canvas");c.width=S;c.height=S;
+      var m=Math.min(img.width,img.height);
+      c.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+      cb(c.toDataURL("image/jpeg",0.8));
+    };
+    img.src=r.result;
+  };
+  r.readAsDataURL(file);
+}
+function byDateDesc(a,b){return a.date<b.date?1:a.date>b.date?-1:0}
+
+
+/* ---------- Enregistrement ----------
+   Chaque modification est écrite champ par champ, ce qui évite d'écraser le travail
+   d'un collègue. Une copie reste sur l'appareil, et tout ce qui n'a pas pu partir
+   est renvoyé automatiquement. */
+var pend={};          /* pend[collection][id] = "set" | "del" : en attente d'envoi */
+var ver={};           /* numéro de version local de chaque document */
+var inflight=0,lastSaved=null,errMsg="",queue=Promise.resolve();
+
+function saveLocal(){
+  try{localStorage.setItem(LS,JSON.stringify(state));localStorage.setItem(LSP,JSON.stringify(pend))}catch(e){}
+}
+function loadLocal(){
+  try{
+    var r=JSON.parse(localStorage.getItem(LS)||"null");
+    if(r)COLS.forEach(function(c){state[c]=r[c]||[]});
+    var d=JSON.parse(localStorage.getItem(LSP)||"null");
+    if(d&&typeof d==="object")pend=d;
+  }catch(e){}
+}
+function pendingCount(){var n=0;COLS.forEach(function(c){n+=Object.keys(pend[c]||{}).length});return n}
+function hhmm(d){return d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
+function setStatus(){
+  var chip=$("sync"),txt=$("syncTxt"),btn=$("syncRetry");
+  chip.classList.remove("on");chip.classList.remove("bad");
+  btn.hidden=true;
+  if(!db){txt.textContent="Enregistré sur cet appareil seulement";return}
+  if(errMsg){chip.classList.add("bad");txt.textContent=errMsg;btn.hidden=false;return}
+  if(inflight>0||pendingCount()>0){txt.textContent="Enregistrement…";return}
+  chip.classList.add("on");
+  txt.textContent="Enregistré"+(lastSaved?" à "+hhmm(lastSaved):"");
+}
+function errText(e){
+  var c=e&&e.code;
+  if(c==="quota_exceeded")return "Espace plein : supprime des données";
+  if(c==="invalid_argument")return "Lecture seule : droits insuffisants";
+  return "Non enregistré : vérifie ta connexion";
+}
+
+function push(col,id,kind,partial,v){
+  var k=col+"/"+id,ref=db.collection(col).doc(id);
+  inflight++;setStatus();
+  queue=queue.then(function(){
+    if(kind==="del")return ref.delete();
+    var doc=state[col].find(function(x){return x.id===id});
+    if(!doc)return;
+    if(partial)return ref.update(partial).catch(function(e){
+      if(e&&e.code==="invalid_argument")return ref.set(doc);
+      throw e;
+    });
+    return ref.set(doc);
+  }).then(function(){
+    inflight--;errMsg="";lastSaved=new Date();
+    if(ver[k]===v&&pend[col]&&pend[col][id]===kind)delete pend[col][id];
+    saveLocal();setStatus();
+  },function(e){
+    inflight--;errMsg=errText(e);setStatus();
+  });
+}
+function commit(col,id,kind,partial){
+  var k=col+"/"+id,v=ver[k]=(ver[k]||0)+1;
+  pend[col]=pend[col]||{};
+  pend[col][id]=kind;
+  saveLocal();setStatus();
+  if(db)push(col,id,kind,partial,v);
+}
+function retryAll(){
+  errMsg="";
+  if(!db){setStatus();return}
+  COLS.forEach(function(c){
+    Object.keys(pend[c]||{}).forEach(function(id){
+      var k=c+"/"+id;
+      push(c,id,pend[c][id],null,ver[k]||0);
+    });
+  });
+  setStatus();
+}
+
+function mergeInto(t,p){
+  Object.keys(p).forEach(function(k){
+    var v=p[k];
+    if(v&&typeof v==="object"&&!Array.isArray(v)){
+      if(!t[k]||typeof t[k]!=="object"||Array.isArray(t[k]))t[k]={};
+      mergeInto(t[k],v);
+    }else t[k]=v;
+  });
+}
+function put(col,obj){
+  var i=state[col].findIndex(function(x){return x.id===obj.id});
+  if(i<0)state[col].push(obj);else state[col][i]=obj;
+  renderAll();
+  commit(col,obj.id,"set",null);
+}
+function patch(col,id,partial){
+  var i=state[col].findIndex(function(x){return x.id===id});
+  if(i<0)return;
+  var copy=JSON.parse(JSON.stringify(state[col][i]));
+  mergeInto(copy,partial);
+  state[col][i]=copy;
+  renderAll();
+  commit(col,id,"set",partial);
+}
+function setField(col,id,field,value){
+  var d=state[col].find(function(x){return x.id===id});
+  if(!d||d[field]===value)return false;
+  var p={};p[field]=value;
+  patch(col,id,p);
+  return true;
+}
+function del(col,id){
+  state[col]=state[col].filter(function(x){return x.id!==id});
+  renderAll();
+  commit(col,id,"del",null);
+}
+
+/* Notes de suivi : une entrée par clé, pour que deux personnes puissent écrire en même temps. */
+function injNotes(i){
+  var n=i&&i.notes;
+  if(!n)return [];
+  if(Array.isArray(n))return n.slice();
+  return Object.keys(n).sort().map(function(k){return n[k]});
+}
+function addNote(inj,note){
+  var nid="n"+uid(),p={};
+  if(Array.isArray(inj.notes)){
+    var m={};
+    inj.notes.forEach(function(x,k){m["a"+(k<10?"0":"")+k]=x});
+    m[nid]=note;
+    p.notes=m;
+  }else{p.notes={};p.notes[nid]=note}
+  patch("injuries",inj.id,p);
+}
+
+/* Taille et poids : le dernier test daté fait foi pour le profil. */
+var BODY={weight:"poids",height:"taille"};
+function recordBody(pid,field,value){
+  var tid=BODY[field];
+  if(!tid||value==null||isNaN(value))return;
+  var t=today(),ex=state.tests.find(function(r){return r.playerId===pid&&r.test===tid&&r.date===t});
+  if(ex)setField("tests",ex.id,"value",value);
+  else put("tests",{id:uid(),playerId:pid,test:tid,date:t,value:value});
+}
+function syncBody(pid,tid){
+  var field=tid==="poids"?"weight":tid==="taille"?"height":null;
+  if(!field)return;
+  var rs=state.tests.filter(function(r){return r.playerId===pid&&r.test===tid})
+    .sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
+  var last=rs[rs.length-1];
+  if(!last||!player(pid))return;
+  setField("players",pid,field,last.value);
+}
+
+/* ---------- Rôles ----------
+   coach  : préparateur ou éditeur, peut tout faire
+   player : contributeur, ne saisit que ses charges sur la barre
+   reader : lecture seule
+   pending: rôle en cours de lecture (affichage prudent, sans commandes) */
+var HAS_CLAUDE=!!(window.claude&&window.claude.use);
+var role=HAS_CLAUDE?"pending":"coach";
+var viewAs=false;
+function isCoach(){return role==="coach"&&!viewAs}
+function canEnter(){return role!=="reader"&&role!=="pending"}
+function setRole(r){
+  role=r;
+  var el=$("roleTag");
+  if(el){
+    el.textContent=r==="coach"?(viewAs?"Aperçu joueur":"Staff"):r==="player"?"Joueur":r==="reader"?"Lecture seule":"";
+    el.hidden=!el.textContent;
+  }
+  if(typeof renderAll==="function")renderAll();
+}
+function detectRole(){
+  return window.claude.use("user").then(function(u){
+    if(!u){setRole("coach");return}
+    return Promise.all([u.isOwner(),u.canEdit(),u.can("data.write")]).then(function(r){
+      if(r[0]||r[1])setRole("coach");
+      else if(r[2]===false)setRole("reader");
+      else setRole("player");
+    });
+  }).catch(function(){setRole("reader")});
+}
+
+/* ---------- Charges sur la barre ----------
+   Une fiche par joueur et par séance, pour que les joueurs n'aient le droit
+   d'écrire que là. */
+function chargeDoc(mid,pid){return state.charges.find(function(c){return c.id===mid+"_"+pid})}
+function chargeVal(m,pid,exId){
+  var c=chargeDoc(m.id,pid);
+  if(c&&c.v&&(exId in c.v))return c.v[exId]>0?c.v[exId]:0;
+  var old=m.charges&&m.charges[pid]&&m.charges[pid][exId];
+  return old>0?old:0;
+}
+function upsertCharge(mid,pid,partial){
+  var id=mid+"_"+pid,doc=chargeDoc(mid,pid);
+  if(doc){patch("charges",id,partial);return}
+  var base=Object.assign({id:id,muscuId:mid,playerId:pid},partial);
+  state.charges.push(JSON.parse(JSON.stringify(base)));
+  renderAll();
+  commit("charges",id,"set",base);
+}
+function setCharge(mid,pid,exId,kg){var inner={};inner[exId]=kg>0?kg:null;upsertCharge(mid,pid,{v:inner})}
+function setRpe(mid,pid,val){upsertCharge(mid,pid,{rpe:val>=1&&val<=10?val:null})}
+function rpeVal(mid,pid){var c=chargeDoc(mid,pid);return c&&c.rpe>0?c.rpe:0}
+function doneCount(m){
+  return state.players.filter(function(p){
+    if(rpeVal(m.id,p.id))return true;
+    return (m.exercises||[]).some(function(e){return chargeVal(m,p.id,e.id)>0});
+  }).length;
+}
+function delCharges(mid){
+  state.charges.filter(function(c){return c.muscuId===mid}).forEach(function(c){del("charges",c.id)});
+}
+
+function connect(){
+  if(!HAS_CLAUDE)return;
+  window.claude.use("db").then(function(d){
+    if(!d){setRole("coach");return}
+    db=d;
+    detectRole();
+    COLS.forEach(function(c){
+      d.collection(c).onSnapshot(function(snap){
+        var prev=state[c],p=pend[c]||{};
+        var out=snap.docs.map(function(x){var o=x.data()||{};o.id=x.id;return o})
+          .filter(function(o){return p[o.id]!=="del"});
+        Object.keys(p).forEach(function(id){
+          if(p[id]!=="set")return;
+          var local=prev.find(function(x){return x.id===id});
+          if(!local)return;
+          var k=out.findIndex(function(x){return x.id===id});
+          if(k<0)out.push(local);else out[k]=local;
+        });
+        state[c]=out;
+        saveLocal();
+        renderAll();
+      },function(){
+        errMsg="Synchronisation interrompue";setStatus();
+      });
+    });
+    retryAll();
+    setStatus();
+  }).catch(function(){});
+}
+
+function activeInjury(pid){
+  return state.injuries.find(function(i){return i.playerId===pid&&i.status!=="apte"});
+}
+
+/* ---------- Équipe : grille de photos ---------- */
+var POSITIONS=["Pilier","Talonneur","Deuxième ligne","Troisième ligne","Demi de mêlée","Demi d'ouverture","Centre","Ailier","Arrière"];
+var focusSess=null,focusPid=null,showAdd=false,psub="seances",showSess="",ptest=null,chartData=null;
+
+function renderEquipe(){
+  if(!isCoach())focusSess=null;
+  var m=focusSess?state.muscu.find(function(x){return x.id===focusSess}):null;
+  if(focusSess&&!m)focusSess=null;
+  var p=focusPid?player(focusPid):null;
+  if(focusPid&&!p)focusPid=null;
+  $("previewBar").hidden=!(role==="coach"&&viewAs);
+  $("sessView").hidden=!focusSess;
+  $("teamView").hidden=!!focusPid||!!focusSess;
+  $("playerView").hidden=!focusPid;
+  if(focusSess)renderSessionPage(m);
+  else if(focusPid)renderPlayerPage(p);
+  else{renderSessPanel();renderRoster()}
+}
+
+function renderSessPanel(){
+  var el=$("sessPanel");
+  el.hidden=!isCoach();
+  if(!isCoach())return;
+  var list=state.muscu.slice().sort(byDateDesc);
+  var form="";
+  if(showSess==="muscu"){
+    form='<form class="row pMuscuForm" style="margin-top:12px">'+
+      '<label style="width:150px">Date<input name="date" type="date" required value="'+today()+'"></label>'+
+      '<label class="grow">Intitulé<input name="title" required autocomplete="off" placeholder="Ex. Bas du corps"></label>'+
+      '<label class="grow" style="flex-basis:260px">Exercices, un par ligne<textarea name="ex" required rows="5" placeholder="Squat 4x5&#10;Soulevé de terre roumain 3x8&#10;Hip thrust 3x10"></textarea></label>'+
+      '<button class="btn" type="submit">Créer</button></form>'+
+      '<p class="hint" style="margin-top:8px">Écris l\'exercice puis séries x répétitions (ex. Squat 4x5). Les joueurs saisissent ensuite leur RPE et la charge posée sur la barre.</p>';
+  }
+  var n=state.players.length;
+  var rows=list.map(function(m){
+    return '<button type="button" class="srow" data-sess="'+m.id+'"><span><b>'+esc(m.title)+'</b> <span class="hint">'+fmtLong(m.date)+'</span></span><span class="hint">'+doneCount(m)+' / '+n+' ont saisi</span></button>';
+  }).join("");
+  el.innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Séances de musculation</h2>'+
+    '<span class="row"><button class="btn ghost small" type="button" data-act="preview">Voir l\'espace joueur</button>'+
+    '<button class="btn small" type="button" data-act="toggleSess" data-kind="muscu" aria-pressed="'+(showSess==="muscu")+'">+ Nouvelle séance</button></span></div>'+
+    form+(rows||'<p class="empty" style="margin-top:10px">Aucune séance. Crée la première avec le bouton ci-dessus.</p>');
+}
+
+function renderRoster(){
+  $("addPanel").hidden=!(isCoach()&&showAdd);
+  var el=$("roster");
+  var tiles=state.players.slice().sort(function(a,b){return a.name.localeCompare(b.name,"fr")}).map(function(p){
+    var inj=isCoach()?activeInjury(p.id):null,tone=inj?(inj.status==="soin"?"bad":"warn"):"";
+    var pic=p.photo?'<img class="ph '+tone+'" src="'+esc(p.photo)+'" alt="">':'<span class="ph '+tone+'" aria-hidden="true">'+esc(initials(p.name))+'</span>';
+    return '<button type="button" class="tile" data-open="'+p.id+'" aria-label="Ouvrir la fiche de '+esc(p.name)+'">'+pic+'<span class="cap">'+esc(p.name)+'</span></button>';
+  }).join("");
+  var add=!isCoach()?"":'<button type="button" class="tile add" data-act="toggleAdd" aria-expanded="'+showAdd+'"><span class="ph" aria-hidden="true">+</span><span class="cap">Ajouter un joueur</span></button>';
+  var intro=state.players.length?"":(isCoach()?'<p class="empty">Aucun joueur pour l\'instant. Ajoute ton effectif avec la case +, ou charge un jeu d\'exemple pour voir comment l\'appli se remplit.</p>'+
+    '<p style="margin:0 0 14px"><button class="btn ghost" type="button" data-act="demo">Charger un exemple</button></p>':
+    '<p class="empty">'+(role==="pending"?"Chargement…":"Aucun joueur pour l\'instant. Le préparateur doit d\'abord ajouter l\'effectif.")+'</p>');
+  el.innerHTML=intro+'<div class="team">'+tiles+add+'</div>'+
+    (state.players.length?'<p class="hint" style="margin-top:12px">'+(isCoach()?'Touche une photo pour ouvrir la fiche du joueur. Un contour orange ou rouge signale un joueur en retour progressif ou en soin.':'Touche ta photo pour saisir tes charges.')+'</p>':'');
+}
+
+/* ---------- Musculation ---------- */
+function parseEx(text){
+  return text.split(/\n/).map(function(l){return l.trim()}).filter(Boolean).map(function(l){
+    var m=l.match(/^(.*?)\s+(\d+)\s*[x×X]\s*(\d+)\s*$/);
+    return m?{id:uid(),name:m[1],sets:+m[2],reps:+m[3]}:{id:uid(),name:l,sets:null,reps:null};
+  });
+}
+function lastCharge(pid,name,date,exceptId){
+  var key=name.trim().toLowerCase(),best=null;
+  state.muscu.forEach(function(m){
+    if(m.id===exceptId||m.date>date)return;
+    (m.exercises||[]).forEach(function(e){
+      if(e.name.trim().toLowerCase()!==key)return;
+      var v=chargeVal(m,pid,e.id);
+      if(v>0&&(!best||m.date>best.date))best={date:m.date,v:v};
+    });
+  });
+  return best;
+}
+
+/* ---------- Fiche joueur ---------- */
+var PTABS=[["seances","Séances"],["tests","Tests"],["blessures","Blessures"]];
+
+function renderPlayerPage(p){
+  var coach=isCoach();
+  if(!coach)psub="seances";
+  var inj=coach?activeInjury(p.id):null,st=inj?STATUS[inj.status]:["Disponible","ok"];
+  var portrait=p.photo?'<img class="portrait" src="'+esc(p.photo)+'" alt="Photo de '+esc(p.name)+'">':'<span class="portrait" aria-hidden="true">'+esc(initials(p.name))+'</span>';
+  var body=coach?{seances:pSeances,tests:pTests,blessures:pBlessures}[psub](p):pSeances(p);
+  var head;
+  if(coach){
+    var posOpts=POSITIONS.map(function(x){return '<option'+(x===p.pos?' selected':'')+'>'+esc(x)+'</option>'}).join("");
+    head='<div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0;font-size:1.8rem">'+esc(p.name)+'</h2><span class="pill '+st[1]+'">'+st[0]+'</span></div>'+
+      '<div class="fgrid">'+
+        '<label>Nom<input data-pf="name" data-id="'+p.id+'" value="'+esc(p.name)+'" autocomplete="off"></label>'+
+        '<label>Poste<select data-pf="pos" data-id="'+p.id+'">'+posOpts+'</select></label>'+
+        '<label>Taille (cm)<input type="number" min="140" max="230" step="1" inputmode="numeric" data-pf="height" data-id="'+p.id+'" value="'+(p.height||"")+'"></label>'+
+        '<label>Poids (kg)<input type="number" min="40" max="200" step="0.1" inputmode="decimal" data-pf="weight" data-id="'+p.id+'" value="'+(p.weight||"")+'"></label>'+
+      '</div>'+
+      '<div class="row" style="margin-top:12px;justify-content:space-between">'+
+        '<label class="photo">'+(p.photo?'Changer la photo':'Ajouter une photo')+'<input type="file" accept="image/*" data-photo="'+p.id+'"></label>'+
+        '<button class="btn ghost small" type="button" data-act="delPlayer" data-id="'+p.id+'">Retirer le joueur</button>'+
+      '</div>';
+  }else{
+    head='<h2 style="margin:0 0 4px;font-size:1.8rem">'+esc(p.name)+'</h2><span class="hint">'+esc(p.pos||"")+'</span>';
+  }
+  var seg=coach?'<div class="seg" id="pseg">'+PTABS.map(function(t){return '<button type="button" data-psub="'+t[0]+'" aria-pressed="'+(t[0]===psub)+'">'+t[1]+'</button>'}).join("")+'</div>':"";
+  $("playerView").innerHTML=
+    '<button class="btn ghost small back" type="button" data-act="closePlayer">← Équipe</button>'+
+    '<div class="panel"><div class="pcard">'+portrait+'<div class="info">'+head+'</div></div></div>'+
+    seg+body;
+  if(coach&&psub==="tests"&&ptest)wireChart();
+}
+
+/* Séances de musculation */
+function exText(m){
+  return (m.exercises||[]).map(function(e){return e.name+(e.sets?" "+e.sets+"x"+e.reps:"")}).join("\n");
+}
+function rpeScale(mid,pid,locked){
+  var cur=rpeVal(mid,pid),out="";
+  for(var k=1;k<=10;k++)out+='<button type="button"'+(locked?' disabled':'')+' data-rpeset="'+mid+'" data-pid="'+pid+'" data-val="'+k+'" aria-pressed="'+(cur===k)+'" aria-label="RPE '+k+'">'+k+'</button>';
+  return '<div class="rpe" role="group" aria-label="RPE de la séance, de 1 à 10">'+out+'</div>';
+}
+function pSeances(p){
+  var coach=isCoach(),locked=!canEnter();
+  var blocks=state.muscu.slice().sort(byDateDesc).map(function(m){
+    var exs=m.exercises||[];
+    var rs=exs.map(function(e){
+      var v=chargeVal(m,p.id,e.id);
+      var last=lastCharge(p.id,e.name,m.date,m.id);
+      return '<tr><td>'+esc(e.name)+'</td><td class="num">'+(e.sets?e.sets+' × '+e.reps:'—')+'</td>'+
+        '<td class="num"><input type="number" min="0" step="0.5" inputmode="decimal"'+(locked?' disabled':'')+' aria-label="'+esc(e.name)+', charge sur la barre en kg" data-mc="'+m.id+'" data-pid="'+p.id+'" data-ex="'+e.id+'" value="'+(v>0?v:"")+'" placeholder="'+(last?num(last.v,1):"kg")+'" style="width:90px;text-align:right"></td></tr>';
+    }).join("");
+    var top='<div style="margin-top:16px"><b>'+esc(m.title)+'</b> <span class="hint">'+fmtLong(m.date)+'</span></div>';
+    return top+'<div class="tablewrap"><table><thead><tr><th>Exercice</th><th class="num">Séries</th><th class="num">Charge sur la barre (kg)</th></tr></thead><tbody>'+rs+'</tbody></table></div>'+
+      '<div style="margin-top:10px"><span class="hint">RPE de la séance (1 facile, 10 maximal)</span>'+rpeScale(m.id,p.id,locked)+'</div>';
+  }).join("");
+  var empty=coach?'Aucune séance de musculation. Crée-en une depuis l\'accueil du staff.':(role==="pending"?'Chargement…':'Aucune séance de musculation pour l\'instant. Le préparateur doit en créer une.');
+  return '<div class="panel"><h2>Musculation</h2>'+(blocks||'<p class="empty">'+empty+'</p>')+'</div>';
+}
+
+/* Page d'une séance (staff) : tous les joueurs d'un coup */
+function renderSessionPage(m){
+  var exs=m.exercises||[];
+  var head='<tr><th>Joueur</th><th>RPE</th>'+exs.map(function(e){return '<th class="num">'+esc(e.name)+(e.sets?'<br><span class="hint">'+e.sets+' × '+e.reps+'</span>':'')+'</th>'}).join("")+'</tr>';
+  var rows=state.players.slice().sort(function(a,b){return a.name.localeCompare(b.name,"fr")}).map(function(p){
+    var cells=exs.map(function(e){
+      var v=chargeVal(m,p.id,e.id);
+      return '<td class="num"><input type="number" min="0" step="0.5" inputmode="decimal" aria-label="'+esc(p.name+', '+e.name+', charge en kg')+'" data-mc="'+m.id+'" data-pid="'+p.id+'" data-ex="'+e.id+'" value="'+(v>0?v:"")+'" style="width:76px;text-align:right"></td>';
+    }).join("");
+    var r=rpeVal(m.id,p.id);
+    return '<tr><td>'+esc(p.name)+'</td><td><input type="number" min="1" max="10" step="1" inputmode="numeric" aria-label="'+esc(p.name)+', RPE de 1 à 10" data-rpe="'+m.id+'" data-pid="'+p.id+'" value="'+(r||"")+'" style="width:60px;text-align:right"></td>'+cells+'</tr>';
+  }).join("");
+  $("sessView").innerHTML=
+    '<button class="btn ghost small back" type="button" data-act="closeSess">← Séances</button>'+
+    '<div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><div><h2 style="margin:0">'+esc(m.title)+'</h2><span class="hint">'+fmtLong(m.date)+' · '+doneCount(m)+' / '+state.players.length+' ont saisi</span></div>'+
+    '<button class="btn ghost small" type="button" data-act="delMuscu" data-id="'+m.id+'">Supprimer la séance</button></div>'+
+    '<details class="exedit"><summary>Modifier la séance</summary>'+
+    '<form class="row exEditForm" data-id="'+m.id+'" style="margin-top:10px">'+
+    '<label style="width:150px">Date<input name="date" type="date" required value="'+esc(m.date)+'"></label>'+
+    '<label class="grow">Intitulé<input name="title" required autocomplete="off" value="'+esc(m.title)+'"></label>'+
+    '<label class="grow" style="flex-basis:260px">Exercices, un par ligne<textarea name="ex" required rows="5">'+esc(exText(m))+'</textarea></label>'+
+    '<button class="btn" type="submit">Enregistrer</button></form></details></div>'+
+    '<div class="panel"><h2>Saisie par joueur</h2>'+(state.players.length?'<div class="tablewrap"><table class="grid"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>':'<p class="empty">Aucun joueur.</p>')+'</div>';
+}
+
+/* Blessures du joueur */
+function pBlessures(p){
+  var mine=state.injuries.filter(function(i){return i.playerId===p.id}).sort(function(a,b){return byDateDesc(a,b)});
+  function f(label,name,type,ph){
+    return '<label>'+label+'<input name="'+name+'" type="'+(type||"text")+'" autocomplete="off"'+(ph?' placeholder="'+esc(ph)+'"':'')+'></label>';
+  }
+  var form='<div class="panel"><h2>Nouvelle fiche kiné</h2><form class="pInjForm" data-pid="'+p.id+'"><div class="fgrid">'+
+    '<label>Date de la blessure<input name="date" type="date" required value="'+today()+'"></label>'+
+    f('Zone de blessure','zone','text','Ex. ischio-jambiers gauche').replace('autocomplete="off"','autocomplete="off" required')+
+    f('Référent','referent','text','Kiné ou médecin référent')+
+    f('Étape actuelle','stepNow','text','Ex. renforcement excentrique')+
+    f('Prochaine étape','stepNext','text','Ex. course en ligne droite')+
+    f('Date prévisionnelle de reprise','returnDate','date')+
+    f('Activité autorisée en prépa physique (prioritaire)','allowed','text','Ex. haut du corps, vélo, pas de sprint')+
+    '</div><div class="row" style="margin-top:12px"><button class="btn" type="submit">Créer la fiche</button></div></form></div>';
+  return form+(mine.length?mine.map(injuryCard).join(""):'<div class="panel"><p class="empty">Aucune blessure enregistrée pour ce joueur.</p></div>');
+}
+
+/* ---------- Tests du joueur : grille puis détail ---------- */
+function testMeta(id){return TESTS.find(function(x){return x.id===id})||{id:id,label:id,unit:"",better:"high"}}
+function evoPill(meta,d){
+  if(d===0)return '<span class="pill off">Stable</span>';
+  if(meta.better==="neutral")return '<span class="pill off">'+(d>0?'+':'')+num(d,2)+' '+esc(meta.unit)+'</span>';
+  var good=meta.better==="high"?d>0:d<0;
+  return '<span class="pill '+(good?'ok':'bad')+'">'+(d>0?'+':'')+num(d,2)+' '+esc(meta.unit)+'</span>';
+}
+function playerTests(pid,tid){
+  return state.tests.filter(function(r){return r.playerId===pid&&r.test===tid})
+    .sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
+}
+
+function pTests(p){
+  if(ptest)return pTestDetail(p,ptest);
+  chartData=null;
+  var tiles=TESTS.map(function(t){
+    var rs=playerTests(p.id,t.id),last=rs[rs.length-1],prev=rs[rs.length-2];
+    var trend=!last?'<span class="ts">Aucune mesure</span>':(prev?evoPill(t,last.value-prev.value):'<span class="pill off">1re mesure</span>');
+    return '<button type="button" class="ttile" data-test="'+t.id+'" aria-label="Ouvrir le test '+esc(t.label)+'">'+
+      '<span class="tn">'+esc(t.label)+'</span>'+
+      '<span class="tv">'+(last?num(last.value,2)+' <small>'+esc(t.unit)+'</small>':'—')+'</span>'+
+      trend+
+      (last?'<span class="ts">'+fmt(last.date)+' · '+rs.length+(rs.length>1?' mesures':' mesure')+'</span>':'')+
+    '</button>';
+  }).join("");
+  return '<div class="panel"><h2>Tests physiques</h2><div class="testgrid">'+tiles+'</div>'+
+    '<p class="hint" style="margin-top:12px">Touche un test pour voir les résultats et leur évolution dans le temps.</p></div>';
+}
+
+function niceStep(raw){
+  var p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
+  return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;
+}
+function decs(step){
+  var d=0;
+  while(d<4&&Math.abs(step*Math.pow(10,d)-Math.round(step*Math.pow(10,d)))>1e-9)d++;
+  return d;
+}
+
+function lineChart(rs,meta){
+  var W=640,H=260,L=52,R=28,T=30,B=34;
+  var vals=rs.map(function(r){return r.value});
+  var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
+  var rng=mx-mn;
+  if(rng===0)rng=Math.abs(mx)*0.1||1;
+  var step=niceStep(rng*1.3/4);
+  var lo=Math.floor((mn-rng*0.15)/step+1e-9)*step,hi=Math.ceil((mx+rng*0.15)/step-1e-9)*step;
+  if(hi<=lo)hi=lo+step;
+  var t0=toDate(rs[0].date).getTime(),t1=toDate(rs[rs.length-1].date).getTime();
+  function X(r){return t1===t0?L+(W-L-R)/2:L+(W-L-R)*(toDate(r.date).getTime()-t0)/(t1-t0)}
+  function Y(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo))}
+  var d=decs(step),n=Math.round((hi-lo)/step),svg="";
+  for(var i=0;i<=n;i++){
+    var v=lo+i*step,y=Y(v);
+    svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--line)" stroke-width="1"/>'+
+      '<text x="'+(L-8)+'" y="'+(y+3)+'" text-anchor="end">'+num(v,d)+'</text>';
+  }
+  var pts=rs.map(function(r){return {x:X(r),y:Y(r.value),value:r.value,date:r.date}});
+  var idx=[];
+  if(pts.length<=5)pts.forEach(function(_,k){idx.push(k)});
+  else for(var k=0;k<5;k++){var j=Math.round(k*(pts.length-1)/4);if(idx.indexOf(j)<0)idx.push(j)}
+  idx.forEach(function(k){
+    svg+='<text x="'+pts[k].x+'" y="'+(H-12)+'" text-anchor="middle">'+fmt(pts[k].date)+'</text>';
+  });
+  var path=pts.map(function(q,k){return (k?'L':'M')+q.x.toFixed(1)+' '+q.y.toFixed(1)}).join(" ");
+  if(pts.length>1){
+    svg+='<path d="'+path+' L'+pts[pts.length-1].x.toFixed(1)+' '+(H-B)+' L'+pts[0].x.toFixed(1)+' '+(H-B)+' Z" style="fill:var(--series)" opacity="0.1"/>';
+    svg+='<path d="'+path+'" fill="none" style="stroke:var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  svg+='<line id="chXh" y1="'+T+'" y2="'+(H-B)+'" x1="0" x2="0" visibility="hidden" style="stroke:var(--muted)" stroke-width="1"/>';
+  pts.forEach(function(q){
+    svg+='<circle cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="4" style="fill:var(--series);stroke:var(--surface)" stroke-width="2"/>';
+  });
+  svg+='<circle id="chAd" r="6" cx="0" cy="0" visibility="hidden" style="fill:var(--series);stroke:var(--surface)" stroke-width="2"/>';
+  var last=pts[pts.length-1];
+  svg+='<text x="'+last.x.toFixed(1)+'" y="'+(last.y-12).toFixed(1)+'" text-anchor="middle" style="fill:var(--fg);font-weight:600;font-size:11px">'+num(last.value,2)+'</text>';
+  pts.forEach(function(q,k){
+    svg+='<circle data-pi="'+k+'" tabindex="0" role="img" aria-label="'+fmt(q.date)+' : '+num(q.value,2)+' '+esc(meta.unit)+'" cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="14" style="fill:transparent"/>';
+  });
+  chartData={W:W,pts:pts,unit:meta.unit};
+  return '<div class="chartbox"><svg id="chSvg" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="Évolution : '+esc(meta.label)+'" style="touch-action:pan-y">'+svg+'</svg><div class="tip" id="chTip" hidden></div></div>';
+}
+
+function pTestDetail(p,tid){
+  var meta=testMeta(tid),rs=playerTests(p.id,tid);
+  chartData=null;
+  var back='<button class="btn ghost small back" type="button" data-act="closeTest">← Tous les tests</button>';
+  var neutral=meta.better==="neutral";
+  var best=rs.length?(meta.better==="low"?Math.min:Math.max).apply(null,rs.map(function(r){return r.value})):null;
+  var first=rs[0],last=rs[rs.length-1];
+  var kpis=rs.length?
+    '<div class="kpis" style="margin-bottom:14px">'+
+      '<div class="kpi"><b>'+num(last.value,2)+' <small>'+esc(meta.unit)+'</small></b><span>Dernier résultat, '+fmt(last.date)+'</span></div>'+
+      (neutral?'':'<div class="kpi"><b>'+num(best,2)+' <small>'+esc(meta.unit)+'</small></b><span>Meilleur résultat</span></div>')+
+      (rs.length>1?'<div class="kpi"><b style="font-size:1.4rem">'+evoPill(meta,last.value-first.value)+'</b><span>Depuis la 1re mesure, '+fmt(first.date)+'</span></div>':'')+
+    '</div>':'';
+  var chart=!rs.length?'<p class="empty">Aucune mesure pour ce test. Saisis le premier résultat ci-dessous.</p>':
+    lineChart(rs,meta)+(rs.length===1?'<p class="hint">Une seule mesure pour l\'instant. La courbe apparaît dès la deuxième.</p>':'');
+  var rows=rs.slice().reverse().map(function(r){
+    var i=rs.indexOf(r),prev=rs[i-1];
+    return '<tr><td><input type="date" style="width:150px" aria-label="Date du résultat" data-tedit="date" data-id="'+r.id+'" value="'+esc(r.date)+'"></td>'+
+      '<td class="num"><input type="number" step="any" inputmode="decimal" style="width:100px;text-align:right" aria-label="Résultat en '+esc(meta.unit)+'" data-tedit="value" data-id="'+r.id+'" value="'+esc(r.value)+'"> '+esc(meta.unit)+'</td><td>'+(prev?evoPill(meta,r.value-prev.value):'<span class="pill off">1re mesure</span>')+'</td>'+
+      '<td class="num"><button class="btn ghost small" type="button" data-act="delTest" data-id="'+r.id+'">Retirer</button></td></tr>';
+  }).join("");
+  return back+
+    '<div class="panel"><h2>'+esc(meta.label)+'</h2>'+
+      '<p class="hint" style="margin-bottom:12px">Résultats en '+esc(meta.unit)+'. '+(neutral?'La dernière valeur saisie est reprise automatiquement dans le profil du joueur.':meta.better==="low"?'Plus la valeur est basse, meilleur est le résultat.':'Plus la valeur est haute, meilleur est le résultat.')+'</p>'+
+      kpis+chart+'</div>'+
+    '<div class="panel"><h2>Nouveau résultat</h2>'+
+      '<form class="row pTestForm" data-pid="'+p.id+'"><input type="hidden" name="test" value="'+esc(tid)+'">'+
+      '<label style="width:150px">Résultat ('+esc(meta.unit)+')<input name="value" type="number" step="any" required inputmode="decimal"></label>'+
+      '<label style="width:150px">Date<input name="date" type="date" required value="'+today()+'"></label>'+
+      '<button class="btn" type="submit">Enregistrer</button></form></div>'+
+    (rows?'<div class="panel"><h2>Historique</h2><p class="hint" style="margin-bottom:8px">Tu peux corriger une date ou un résultat directement dans le tableau. L\'enregistrement est automatique.</p><div class="tablewrap"><table><thead><tr><th>Date</th><th class="num">Résultat</th><th>Évolution</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'');
+}
+
+function wireChart(){
+  var d=chartData,svg=$("chSvg"),tip=$("chTip"),xh=$("chXh"),ad=$("chAd");
+  if(!d||!svg||!tip||!xh||!ad)return;
+  function hide(){xh.setAttribute("visibility","hidden");ad.setAttribute("visibility","hidden");tip.hidden=true}
+  function show(i){
+    var pt=d.pts[i],r=svg.getBoundingClientRect(),k=r.width?r.width/d.W:1;
+    xh.setAttribute("x1",pt.x);xh.setAttribute("x2",pt.x);xh.setAttribute("visibility","visible");
+    ad.setAttribute("cx",pt.x);ad.setAttribute("cy",pt.y);ad.setAttribute("visibility","visible");
+    while(tip.firstChild)tip.removeChild(tip.firstChild);
+    var b=document.createElement("b");b.textContent=num(pt.value,2)+" "+d.unit;
+    var s=document.createElement("span");
+    s.textContent=toDate(pt.date).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+    tip.appendChild(b);tip.appendChild(s);
+    tip.hidden=false;
+    var left=Math.min(Math.max(pt.x*k,60),Math.max(60,r.width-60));
+    tip.style.left=left+"px";tip.style.top=(pt.y*k)+"px";
+  }
+  svg.addEventListener("pointermove",function(e){
+    var r=svg.getBoundingClientRect(),x=(e.clientX-r.left)*d.W/(r.width||d.W),best=0,bd=1e9;
+    d.pts.forEach(function(p,i){var dd=Math.abs(p.x-x);if(dd<bd){bd=dd;best=i}});
+    show(best);
+  });
+  svg.addEventListener("pointerleave",hide);
+  if(svg.querySelectorAll)Array.prototype.forEach.call(svg.querySelectorAll("[data-pi]"),function(c){
+    c.addEventListener("focus",function(){show(+c.getAttribute("data-pi"))});
+    c.addEventListener("blur",hide);
+  });
+}
+/* ---------- Blessures : fiches kiné ---------- */
+function daysTo(dateStr){return Math.round((toDate(dateStr)-toDate(today()))/86400000)}
+function returnText(d){
+  if(!d)return "Reprise non planifiée";
+  var n=daysTo(d);
+  if(n>1)return "Reprise dans "+n+" j";
+  if(n===1)return "Reprise demain";
+  if(n===0)return "Reprise aujourd'hui";
+  return "Date de reprise dépassée de "+(-n)+" j";
+}
+function injuryCard(i){
+    var st=STATUS[i.status]||STATUS.soin;
+    var days=Math.max(0,Math.round((toDate(today())-toDate(i.date))/86400000));
+    var notes=injNotes(i).slice().reverse().map(function(n){
+      return '<div class="note"><small>'+fmt(n.date)+(n.author?' · '+esc(n.author):'')+'</small><br>'+esc(n.text)+'</div>';
+    }).join("");
+    var opts=Object.keys(STATUS).map(function(k){return '<option value="'+k+'"'+(k===i.status?' selected':'')+'>'+STATUS[k][0]+'</option>'}).join("");
+    function f(label,field,type,val,ph){
+      return '<label>'+label+'<input type="'+(type||"text")+'" data-injf="'+field+'" data-id="'+i.id+'" value="'+esc(val||"")+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+' autocomplete="off"></label>';
+    }
+    return '<div class="panel">'+
+      '<div class="row" style="justify-content:space-between;margin-bottom:12px">'+
+        '<div class="who">'+avatar(player(i.playerId),true)+'<div><h2 style="margin:0">'+esc(pname(i.playerId))+'</h2>'+
+        '<span class="hint">'+esc(i.zone)+' · blessé depuis '+days+' j · '+returnText(i.status==="apte"?null:i.returnDate)+'</span></div></div>'+
+        '<span class="pill '+st[1]+'">'+st[0]+'</span></div>'+
+      '<div class="fgrid">'+
+        '<label>Statut<select data-injf="status" data-id="'+i.id+'">'+opts+'</select></label>'+
+        f('Date de la blessure','date','date',i.date)+
+        f('Zone de blessure','zone','text',i.zone)+
+        f('Référent','referent','text',i.referent,'Kiné ou médecin référent')+
+        f('Étape actuelle','stepNow','text',i.stepNow)+
+        f('Prochaine étape','stepNext','text',i.stepNext)+
+        f('Date prévisionnelle de reprise','returnDate','date',i.returnDate)+
+        f('Activité autorisée en prépa physique (prioritaire)','allowed','text',i.allowed,'Ex. haut du corps, vélo, pas de sprint')+
+      '</div>'+
+      '<form class="row noteform" data-id="'+i.id+'" style="margin-top:14px">'+
+        '<label style="width:140px">Auteur<input name="author" autocomplete="off" placeholder="Kiné" value="Kiné"></label>'+
+        '<label class="grow" style="flex-basis:220px">Note de suivi<textarea name="text" required placeholder="Soins réalisés, tests, reprise prévue…"></textarea></label>'+
+        '<button class="btn small" type="submit">Ajouter la note</button></form>'+
+      notes+
+      '<div class="row" style="margin-top:12px"><button class="btn ghost small" type="button" data-act="delInjury" data-id="'+i.id+'">Supprimer la fiche</button></div>'+
+    '</div>';
+}
+
+/* ---------- Données d'exemple ---------- */
+function loadDemo(){
+  var seed=7;
+  function rnd(){seed=(seed*9301+49297)%233280;return seed/233280}
+  var names=[["Joueur A (ex.)","Pilier",112,183],["Joueur B (ex.)","Deuxième ligne",104,198],["Joueur C (ex.)","Troisième ligne",98,189],
+    ["Joueur D (ex.)","Demi de mêlée",82,176],["Joueur E (ex.)","Centre",92,184],["Joueur F (ex.)","Ailier",86,180]];
+  var ps=names.map(function(n){var p={id:uid(),name:n[0],pos:n[1],weight:n[2],height:n[3]};put("players",p);return p});
+  var t=today();
+  [[-3,"Bas du corps","Squat 4x5\nSoulevé de terre roumain 3x8\nHip thrust 3x10",[100,80,90]],
+   [-10,"Haut du corps","Développé couché 4x5\nTirage poitrine 3x8\nTractions lestées 3x6",[85,70,15]],
+   [-17,"Bas du corps","Squat 4x5\nSoulevé de terre roumain 3x8\nHip thrust 3x10",[95,75,85]]]
+  .forEach(function(x){
+    var exs=parseEx(x[2]),mid=uid();
+    put("muscu",{id:mid,date:addDays(t,x[0]),title:x[1],exercises:exs});
+    ps.forEach(function(p,i){
+      var v={};
+      exs.forEach(function(e,k){v[e.id]=Math.round((x[3][k]*(0.8+i*.06)+ (rnd()-.5)*4)/2.5)*2.5});
+      put("charges",{id:mid+"_"+p.id,muscuId:mid,playerId:p.id,v:v,rpe:5+((i*3+exs.length)%5)});
+    });
+  });
+  ps.forEach(function(p){
+    [-84,-56,-28,-2].forEach(function(dd,k){
+      put("tests",{id:uid(),playerId:p.id,test:"poids",date:addDays(t,dd),value:+(p.weight-(3-k)*0.6).toFixed(1)});
+    });
+    put("tests",{id:uid(),playerId:p.id,test:"taille",date:addDays(t,-84),value:p.height});
+  });
+  var plan=[["s30",5.6,-0.06,0.08,2],["cmj",46,1.5,-1.2,1],["yoyo",1700,60,-50,0],["sq",140,5,-8,1]];
+  ps.forEach(function(p,i){
+    plan.forEach(function(tp){
+      [-84,-56,-28,-2].forEach(function(dd,k){
+        var v=tp[1]+tp[3]*i+tp[2]*k+(rnd()-.5)*Math.abs(tp[2])*.8;
+        put("tests",{id:uid(),playerId:p.id,test:tp[0],date:addDays(t,dd),value:+v.toFixed(tp[4])});
+      });
+    });
+  });
+  put("injuries",{id:uid(),playerId:ps[4].id,zone:"Ischio-jambiers gauche",date:addDays(t,-6),status:"retour",
+    referent:"Kiné du club (ex.)",stepNow:"Renforcement excentrique, course lente",stepNext:"Course en ligne droite à 80 %",
+    returnDate:addDays(t,9),allowed:"Haut du corps, vélo, gainage. Pas de sprint ni de changement d'appui.",
+    notes:{n1:{date:addDays(t,-6),author:"Kiné",text:"Gêne à l'accélération, bilan clinique réalisé. Repos relatif 48 h."},
+    n2:{date:addDays(t,-2),author:"Kiné",text:"Test d'étirement sans douleur. Reprise de la course en ligne droite validée."}}});
+}
+/* ---------- Affichage et événements ---------- */
+var dirty=false,rt=null;
+
+function typing(){
+  var a=document.activeElement;
+  var v=$("v-equipe");
+  return !!a&&v.contains(a)&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT")&&a.type!=="button"&&a.type!=="file";
+}
+/* Le rendu est différé et ne remplace jamais la page pendant qu'un champ est actif,
+   sinon le champ suivant perdrait le focus à chaque saisie. */
+function renderAll(){
+  clearTimeout(rt);
+  rt=setTimeout(function(){
+    if(typing()){dirty=true;return}
+    dirty=false;
+    renderEquipe();
+  },120);
+}
+function forceRender(){clearTimeout(rt);dirty=false;renderEquipe()}
+document.addEventListener("focusout",function(){
+  setTimeout(function(){if(dirty&&!typing())renderAll()},0);
+});
+
+/* ---------- Saisie automatique ---------- */
+var liveEls=[];
+function numVal(v){var n=parseFloat(String(v).replace(",","."));return isNaN(n)?null:n}
+
+function applyField(t,live){
+  var d=t.dataset;
+  if(d.rpe){
+    var rv=numVal(t.value);
+    if(rv!=null)rv=Math.round(rv);
+    if(!(rv>=1&&rv<=10)){if(!live)t.value=rpeVal(d.rpe,d.pid)||"";return}
+    setRpe(d.rpe,d.pid,rv);
+    return;
+  }
+  if(d.mc){
+    var kg=numVal(t.value);
+    if(!(kg>0))t.value="";
+    setCharge(d.mc,d.pid,d.ex,kg);
+    return;
+  }
+  if(d.injf){
+    if(live&&t.value==="")return;
+    if(setField("injuries",d.id,d.injf,t.value)&&!live&&(d.injf==="status"||d.injf==="returnDate"||d.injf==="date"))renderAll();
+    return;
+  }
+  if(d.pf){
+    var pl=player(d.id);
+    if(!pl)return;
+    var fld=d.pf;
+    if(fld==="name"){
+      var nm=t.value.trim();
+      if(!nm){if(!live)t.value=pl.name;return}
+      setField("players",pl.id,"name",nm);
+    }else if(fld==="height"||fld==="weight"){
+      var nv=numVal(t.value);
+      if(live&&nv==null)return;
+      setField("players",pl.id,fld,nv);
+      recordBody(pl.id,fld,nv);
+    }else setField("players",pl.id,fld,t.value);
+    return;
+  }
+  if(d.tedit){
+    var tr=state.tests.find(function(x){return x.id===d.id});
+    if(!tr)return;
+    var val=d.tedit==="value"?numVal(t.value):t.value;
+    if(val==null||val==="")return;
+    if(setField("tests",tr.id,d.tedit,val))syncBody(tr.playerId,tr.test);
+    return;
+  }
+}
+function flushLive(){
+  var els=liveEls;liveEls=[];
+  els.forEach(function(el){clearTimeout(el._tm);if(el.isConnected)applyField(el,true)});
+}
+document.addEventListener("input",function(e){
+  var t=e.target,d=t.dataset;
+  if(!d||!(d.injf||d.pf||d.tedit||d.mc||d.rpe))return;
+  if(t.tagName==="SELECT"||t.type==="date")return;
+  clearTimeout(t._tm);
+  if(liveEls.indexOf(t)<0)liveEls.push(t);
+  t._tm=setTimeout(function(){
+    liveEls=liveEls.filter(function(x){return x!==t});
+    applyField(t,true);
+  },500);
+});
+document.addEventListener("change",function(e){
+  var t=e.target,d=t.dataset;
+  if(!d)return;
+  if(d.mc||d.rpe||d.injf||d.pf||d.tedit){
+    clearTimeout(t._tm);
+    liveEls=liveEls.filter(function(x){return x!==t});
+    applyField(t,false);
+    if(d.tedit)renderAll();
+    if(d.pf==="name"||d.pf==="pos")renderAll();
+    return;
+  }
+  if(d.photo){
+    var pid=d.photo,file=t.files&&t.files[0];
+    if(!file)return;
+    shrink(file,function(url){
+      if(!url||!player(pid))return;
+      setField("players",pid,"photo",url);
+      forceRender();
+    });
+  }
+});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")flushLive()});
+window.addEventListener("pagehide",flushLive);
+
+/* ---------- Clics ---------- */
+var armedTimer=null;
+document.addEventListener("click",function(e){
+  var o=e.target.closest("button[data-open]");
+  if(o){flushLive();focusPid=o.dataset.open;psub="seances";ptest=null;forceRender();window.scrollTo(0,0);return}
+  var ps=e.target.closest("button[data-psub]");
+  if(ps){flushLive();psub=ps.dataset.psub;ptest=null;forceRender();return}
+  var tt=e.target.closest("button[data-test]");
+  if(tt){flushLive();ptest=tt.dataset.test;forceRender();window.scrollTo(0,0);return}
+  var rb=e.target.closest("button[data-rpeset]");
+  if(rb){
+    if(!canEnter())return;
+    var cur=rpeVal(rb.dataset.rpeset,rb.dataset.pid),nv2=parseInt(rb.dataset.val,10);
+    setRpe(rb.dataset.rpeset,rb.dataset.pid,cur===nv2?0:nv2);
+    forceRender();return;
+  }
+  var ss=e.target.closest("button[data-sess]");
+  if(ss&&isCoach()){flushLive();focusSess=ss.dataset.sess;forceRender();window.scrollTo(0,0);return}
+  var b=e.target.closest("button[data-act]");
+  if(!b)return;
+  var act=b.dataset.act,id=b.dataset.id;
+  flushLive();
+  if(act==="retrySync"){retryAll();return}
+  if(act==="closePlayer"){focusPid=null;forceRender();window.scrollTo(0,0);return}
+  if(act==="exitPreview"){viewAs=false;focusPid=null;setRole(role);forceRender();window.scrollTo(0,0);return}
+  if(act==="preview"&&role==="coach"){viewAs=true;focusPid=null;focusSess=null;setRole(role);forceRender();window.scrollTo(0,0);return}
+  if(!isCoach())return;
+  if(act==="closeSess"){focusSess=null;forceRender();window.scrollTo(0,0);return}
+  if(act==="demo"){loadDemo();return}
+  if(act==="toggleAdd"){showAdd=!showAdd;forceRender();return}
+  if(act==="closePlayer"){focusPid=null;forceRender();window.scrollTo(0,0);return}
+  if(act==="closeTest"){ptest=null;forceRender();window.scrollTo(0,0);return}
+  if(act==="toggleSess"){showSess=showSess===b.dataset.kind?"":b.dataset.kind;forceRender();return}
+  if(!b.dataset.armed){
+    var old=b.textContent;
+    b.dataset.armed="1";b.textContent="Confirmer ?";
+    clearTimeout(armedTimer);
+    armedTimer=setTimeout(function(){if(b.isConnected){b.textContent=old;delete b.dataset.armed}},3000);
+    return;
+  }
+  if(act==="delPlayer"){focusPid=null;del("players",id)}
+  if(act==="delMuscu"&&isCoach()){focusSess=null;delCharges(id);del("muscu",id)}
+  if(act==="delTest"){
+    var dt=state.tests.find(function(x){return x.id===id});
+    del("tests",id);
+    if(dt)syncBody(dt.playerId,dt.test);
+  }
+  if(act==="delInjury")del("injuries",id);
+});
+
+/* ---------- Formulaires ---------- */
+$("fPlayer").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=$("pName").value.trim();
+  if(!name)return;
+  var w=numVal($("pWeight").value),h=numVal($("pHeight").value);
+  var base={id:uid(),name:name,pos:$("pPos").value,weight:w,height:h};
+  var file=$("pPhoto").files&&$("pPhoto").files[0];
+  function finish(){
+    put("players",base);
+    recordBody(base.id,"weight",base.weight);
+    recordBody(base.id,"height",base.height);
+    $("pName").value="";$("pWeight").value="";$("pHeight").value="";$("pPhoto").value="";
+    forceRender();$("pName").focus();
+  }
+  if(file)shrink(file,function(url){if(url)base.photo=url;finish()});
+  else finish();
+});
+
+document.addEventListener("submit",function(e){
+  var f=e.target;
+  if(!f.classList)return;
+  flushLive();
+  if(f.classList.contains("pMuscuForm")){
+    e.preventDefault();
+    var exs=parseEx(f.elements.ex.value);
+    if(!exs.length)return;
+    put("muscu",{id:uid(),date:f.elements.date.value,title:f.elements.title.value.trim(),exercises:exs});
+    showSess="";forceRender();
+    return;
+  }
+  if(f.classList.contains("exEditForm")){
+    e.preventDefault();
+    var m0=state.muscu.find(function(x){return x.id===f.dataset.id});
+    if(!m0||!isCoach())return;
+    var parsed=parseEx(f.elements.ex.value);
+    if(!parsed.length)return;
+    var used={};
+    parsed.forEach(function(ne){
+      var key=ne.name.trim().toLowerCase();
+      var old=(m0.exercises||[]).find(function(oe){return !used[oe.id]&&oe.name.trim().toLowerCase()===key});
+      if(old){ne.id=old.id;used[old.id]=1}
+    });
+    patch("muscu",m0.id,{title:f.elements.title.value.trim(),date:f.elements.date.value,exercises:parsed});
+    forceRender();
+    return;
+  }
+  if(f.classList.contains("pTestForm")){
+    e.preventDefault();
+    var tv=numVal(f.elements.value.value);
+    if(tv==null)return;
+    put("tests",{id:uid(),playerId:f.dataset.pid,test:f.elements.test.value,date:f.elements.date.value,value:tv});
+    syncBody(f.dataset.pid,f.elements.test.value);
+    forceRender();
+    return;
+  }
+  if(f.classList.contains("pInjForm")){
+    e.preventDefault();
+    var g=function(n){return f.elements[n].value.trim()};
+    put("injuries",{id:uid(),playerId:f.dataset.pid,zone:g("zone"),date:f.elements.date.value,status:"soin",
+      referent:g("referent"),stepNow:g("stepNow"),stepNext:g("stepNext"),returnDate:f.elements.returnDate.value,allowed:g("allowed"),notes:{}});
+    forceRender();
+    return;
+  }
+  if(!f.classList.contains("noteform"))return;
+  e.preventDefault();
+  var inj=state.injuries.find(function(x){return x.id===f.dataset.id});
+  var text=f.elements.text.value.trim();
+  if(!inj||!text)return;
+  addNote(inj,{date:today(),author:f.elements.author.value.trim(),text:text});
+  f.elements.text.value="";
+  forceRender();
+});
+
+/* ---------- Démarrage ---------- */
+loadLocal();
+renderEquipe();
+setStatus();
+connect();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script>
+</body>
+</html>
